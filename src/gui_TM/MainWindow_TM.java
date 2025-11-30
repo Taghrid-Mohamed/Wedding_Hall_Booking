@@ -2,13 +2,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
  */
-package advancedproject;
+package gui_TM;
 
 /**
  *
- * @author User
+ * @author user
  */
-public class AdvancedProject {
+public class MainWindow_TM {
 
     /**
      * @param args the command line arguments
