@@ -1,6 +1,7 @@
   package projectt;                                  
 
-import model_MA.customert;
+import model_MA.customer_MA;
+import model_MA.hall_MA;
 import java.util.ArrayList;                        
 import java.util.InputMismatchException;           
 import java.util.List;                             
@@ -8,8 +9,8 @@ import java.util.Scanner;
 
 public class maint {                               
     static Scanner inputt = new Scanner(System.in);
-    static List<hallt> hallst = new ArrayList<>(); // لست لتخزين كل القاعات 
-    static List<customert> customerst = new ArrayList<>(); // لست لتخزين كل الزبائن
+    static List<hall_MA> hallst = new ArrayList<>(); // لست لتخزين كل القاعات 
+    static List<customer_MA> customerst = new ArrayList<>(); // لست لتخزين كل الزبائن
     static List<String> bookingst = new ArrayList<>(); // لست  تخزن فيها الحجوزات (اسم زبون+قاعه)
     public static void main(String[] args) {       
         int choicet;    // متغير يخزن اختيار المستخدم من القائمة
