@@ -2,6 +2,7 @@
 
 import model_MA.customer_MA;
 import model_MA.hall_MA;
+import model_MA.Booking_MA:
 import java.util.ArrayList;                        
 import java.util.InputMismatchException;           
 import java.util.List;                             
@@ -33,8 +34,7 @@ public class maint {
 
             choicet = readIntSafet("choice");   //  نقرا رقم الاختيار باستخدام دالة فيها try/catch 
             switch (choicet) {             
-                case 1: 
-                    addhallt();   break; 
+                case 1:  addhallt();   break; 
                 case 2 : addcustomert();     break;                  
                 case 3 : makebookingt(); break;
                 case 4 : listhallst();  break;
