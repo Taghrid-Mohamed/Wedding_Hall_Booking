@@ -1,4 +1,4 @@
-  package projectt;                                  
+package projectt;                                  
 
 import model_MA.customer_MA;
 import model_MA.hall_MA;
@@ -120,7 +120,7 @@ public class maint {
                 throw new IllegalArgumentException("Customer name cannot be empty"); }
             if (phonet.isEmpty()) {
                 throw new IllegalArgumentException("Phone cannot be empty");  }
-            customert newCustomert = new customert(idt, namet, phonet); //ننشئ object زبون
+            customer_MA newCustomert = new customer_MA(idt, namet, phonet); //ننشئ object زبون
             customerst.add(newCustomert);
             System.out.println("Customer added successfully!"); 
         } catch (IllegalArgumentException e) {
@@ -147,7 +147,7 @@ public class maint {
         if (customerIndext < 0 || customerIndext >= customerst.size()) { 
             System.out.println("Invalid customer index!");
             return; }
-        hallt chosentHall = hallst.get(hallIndext);   // نجيب القاعة المختارة من الليست
+        hall_MA chosentHall = hallst.get(hallIndext);   // نجيب القاعة المختارة من الليست
         customert chosencustomer = customerst.get(customerIndext); // نجيب الزبون المختار
         String bookingLine = chosencustomer.getCustomernamet() + " booked hall "+ chosentHall.getHallnamet(); 
         bookingst.add(bookingLine);  // نضيف نص الحجز لليست الحجوزات bookingst
@@ -228,13 +228,14 @@ public class maint {
         if (index == -1) {
             System.out.println("Hall not found!");
             return;}
-        hallt oldHall = hallst.get(index); // القاعة القديمة
+        hall_MA oldHall = hallst.get(index); // القاعة القديمة
         System.out.println("Current data: " + oldHall);    // عرض بياناتها الحالية
         System.out.print("Enter new capacity: ");
         int newCapacityt = readIntSafet("new capacity"); 
         System.out.print("Enter new price: ");
         double newPricet = readDoubleSafet("new price"); 
-        hallt updatedHall = new hallt(oldHall.getHallidt(),oldHall.getHallnamet(),newCapacityt,newPricet); // ننشئ object جديد بنفس الـ ID والاسم لكن بسعة وسعر جديد
+        hall_MA updatedHall; // ننشئ object جديد بنفس الـ ID والاسم لكن بسعة وسعر جديد
+        updatedHall = new hallt(oldHall.getHallidt(),oldHall.getHallnamet(),newCapacityt,newPricet);
         hallst.set(index, updatedHall);  // تبديل القديمة بالجديدة
         System.out.println("Hall updated successfully!");
     }
