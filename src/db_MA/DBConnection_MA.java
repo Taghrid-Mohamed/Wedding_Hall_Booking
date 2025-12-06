@@ -1,13 +1,22 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package db_MA;
 
-/**
- *
- * @author user
- */
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 public class DBConnection_MA {
-    
+
+    private static final String URL  = "jdbc:mysql://localhost:3306/event_system";
+    private static final String USER = "root";
+    private static final String PASS = "";   // لو عندك باسورد حطيه هنا
+
+    // نحتفظ باتصال واحد (Singleton بسيط)
+    private static Connection conn = null;
+
+    public static Connection getConnection() throws SQLException {
+        if (conn == null || conn.isClosed()) {
+            conn = DriverManager.getConnection(URL, USER, PASS);
+        }
+        return conn;
+    }
 }

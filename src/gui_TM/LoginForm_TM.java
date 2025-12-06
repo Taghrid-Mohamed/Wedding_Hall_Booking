@@ -1,9 +1,14 @@
 package gui_TM;
+import service_MA.UserService_MA;
+import model_MA.User_MA;
+
+import java.util.logging.Level;
+import javax.swing.JOptionPane;
 
 public class LoginForm_TM extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(LoginForm_TM.class.getName());
-
+private UserService_MA userService = new UserService_MA();
     public LoginForm_TM() {
         initComponents();
         setLocationRelativeTo(null);
@@ -96,19 +101,49 @@ public class LoginForm_TM extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
-      String user = txtUsername.getText().trim(); // نجيب اليوزرنيم من التكست فيلد
-      String pass = new String(txtPassword.getPassword()); // نجيب الباسورد من الباسورد فيلد
-      if (user.equals("admin") && pass.equals("123")) { // لو البيانات صح
-        javax.swing.JOptionPane.showMessageDialog(this, "Login Successful!");
-        MainWindow_TM main = new MainWindow_TM();// نفتح المين منيو
-        main.setLocationRelativeTo(null); // يخليها في نص الشاشة
-        main.setVisible(true);
-        this.dispose();// يصكر فورم اللوق إن
-      } else { // بيانات غلط يطبع رسالة خطأ
-        javax.swing.JOptionPane.showMessageDialog(this,"Invalid Username or Password!","Error",javax.swing.JOptionPane.ERROR_MESSAGE);//  نخلي اليوزر والباسورد نفضي
-        txtPassword.setText("");
-        txtPassword.requestFocus();
+    String user = txtUsername.getText().trim();
+    String pass = new String(txtPassword.getPassword());
+
+    if (user.isEmpty() || pass.isEmpty()) {
+        JOptionPane.showMessageDialog(this,
+                "Please enter username and password",
+                "Validation Error",
+                JOptionPane.WARNING_MESSAGE);
+        return;
     }
+
+    try {
+        // نحاول نلقو يوزر في الداتابيز
+        User_MA loggedUser = userService.login(user, pass);
+
+        if (loggedUser != null) {
+            JOptionPane.showMessageDialog(this,
+                    "Login Successful! Welcome " + loggedUser.getUsername(),
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+            MainWindow_TM main = new MainWindow_TM();
+            main.setLocationRelativeTo(null);
+            main.setVisible(true);
+            this.dispose();
+
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "Invalid Username or Password!",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            txtPassword.setText("");
+            txtPassword.requestFocus();
+        }
+
+    } catch (Exception ex) {
+        logger.log(Level.SEVERE, "Error during login", ex);
+        JOptionPane.showMessageDialog(this,
+                "Error during login: " + ex.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+    
+}
     }//GEN-LAST:event_btnLoginActionPerformed
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
         this.dispose();

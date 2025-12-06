@@ -1,9 +1,15 @@
 package gui_TM;
+import service_MA.HallService_MA;
+import model_MA.Hall_MA;
+import java.util.List;
+import java.util.logging.Level;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 
 public class HallManagementForm_TM extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(HallManagementForm_TM.class.getName());
-
+private HallService_MA hallService = new HallService_MA();
     public HallManagementForm_TM() {
         initComponents();
         setLocationRelativeTo(null);
@@ -15,8 +21,33 @@ public class HallManagementForm_TM extends javax.swing.JFrame {
         model.addColumn("Capacity");
         model.addColumn("Price");
         model.addColumn("Status");
+          // 👈 أول ما تفتح الشاشة نحمّل البيانات من الداتا بيز
+        loadHallsTable();
     }
+// دالة خاصة تعبي الجدول من الداتا بيز
+    private void loadHallsTable() {
+        DefaultTableModel model = (DefaultTableModel) tblHalls.getModel();
+        model.setRowCount(0); // نمسح أي بيانات قديمة
 
+        try {
+            List<Hall_MA> halls = hallService.getAllHalls();
+            for (Hall_MA h : halls) {
+                model.addRow(new Object[]{
+                        h.getId(),
+                        h.getName(),
+                        h.getCapacity(),
+                        h.getPrice(),
+                        h.getStatus()
+                });
+            }
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Error loading halls", ex);
+            JOptionPane.showMessageDialog(this,
+                    "Error loading halls: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
      @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -132,7 +163,7 @@ public class HallManagementForm_TM extends javax.swing.JFrame {
                         .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                             .addContainerGap()
                             .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(20, Short.MAX_VALUE))
+                .addContainerGap(544, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -198,15 +229,30 @@ public class HallManagementForm_TM extends javax.swing.JFrame {
         } catch (NumberFormatException ex) {
             javax.swing.JOptionPane.showMessageDialog(this,"Price must be a valid number.", "Validation Error",javax.swing.JOptionPane.WARNING_MESSAGE);
             return;}
-        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tblHalls.getModel(); // نجيب الموديل متاع الجدول
-        int id = model.getRowCount() + 1; // نحدد ID بسيط  مؤقتاً
-        model.addRow(new Object[]{id, name, capacity, price, status});
-        // نمسح الحقول بعد الإضافة
+        try {
+            // 👈 نكوّن أوبجكت من Hall_MA ونخزنه في الداتا بيز
+            Hall_MA hall = new Hall_MA(name, capacity, price, status);
+            hallService.addHall(hall);
+
+            JOptionPane.showMessageDialog(this,
+                    "Hall added successfully.",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+        loadHallsTable();
+// نمسح الحقول بعد الإضافة
         txtHallName.setText("");
         txtCapacity.setText("");
         txtPrice.setText("");
         cmbStatus.setSelectedIndex(0);
         txtHallName.requestFocus();
+         } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Error adding hall", ex);
+            JOptionPane.showMessageDialog(this,
+                    "Error adding hall: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnAddActionPerformed
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
@@ -216,9 +262,27 @@ public class HallManagementForm_TM extends javax.swing.JFrame {
             return;}
         int result = javax.swing.JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this hall?","Confirm Delete",javax.swing.JOptionPane.YES_NO_OPTION);//رسالة التاكيد
         if (result == javax.swing.JOptionPane.YES_OPTION) {
-            javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tblHalls.getModel();
-            model.removeRow(selectedRow);//حذف الصف 
+               try {
+                // 👈 نجيب الـ ID من العمود الأول
+                int id = (int) tblHalls.getValueAt(selectedRow, 0);
+                hallService.deleteHall(id);
+
+                JOptionPane.showMessageDialog(this,
+                        "Hall deleted successfully.",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+
+                loadHallsTable();
+
+            } catch (Exception ex) {
+                logger.log(Level.SEVERE, "Error deleting hall", ex);
+                JOptionPane.showMessageDialog(this,
+                        "Error deleting hall: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         }
+
     }//GEN-LAST:event_btnDeleteActionPerformed
 
     private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
@@ -241,11 +305,26 @@ public class HallManagementForm_TM extends javax.swing.JFrame {
         } catch (NumberFormatException ex) {
             javax.swing.JOptionPane.showMessageDialog(this,"Capacity must be integer and Price must be numeric.","Validation Error",javax.swing.JOptionPane.WARNING_MESSAGE);
             return; }
-        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tblHalls.getModel();
-        model.setValueAt(name, selectedRow, 1);     // تحدث العمود 1 = Name
-        model.setValueAt(capacity, selectedRow, 2); 
-        model.setValueAt(price, selectedRow, 3); 
-        model.setValueAt(status, selectedRow, 4); 
+        try {
+            int id = (int) tblHalls.getValueAt(selectedRow, 0);
+
+            Hall_MA hall = new Hall_MA(id, name, capacity, price, status);
+            hallService.updateHall(hall);
+
+            JOptionPane.showMessageDialog(this,
+                    "Hall updated successfully.",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+            loadHallsTable();
+
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Error updating hall", ex);
+            JOptionPane.showMessageDialog(this,
+                    "Error updating hall: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnUpdateActionPerformed
 
     private void tblHallsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblHallsMouseClicked

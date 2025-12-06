@@ -1,13 +1,28 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package service_MA;
 
-/**
- *
- * @author user
- */
+import dao_MA.HallDAO_MA;
+import model_MA.Hall_MA;
+
+import java.sql.SQLException;
+import java.util.List;
+
 public class HallService_MA {
-    
+
+    private HallDAO_MA hallDAO = new HallDAO_MA();
+
+    public void addHall(Hall_MA hall) throws SQLException {
+        hallDAO.insertHall(hall);
+    }
+
+    public void updateHall(Hall_MA hall) throws SQLException {
+        hallDAO.updateHall(hall);
+    }
+
+    public void deleteHall(int id) throws SQLException {
+        hallDAO.deleteHall(id);
+    }
+
+    public List<Hall_MA> getAllHalls() throws SQLException {
+        return hallDAO.getAllHalls();
+    }
 }

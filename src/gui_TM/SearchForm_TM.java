@@ -1,9 +1,16 @@
 package gui_TM;
-
+import service_MA.BookingService_MA;
+import model_MA.Booking_MA;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+ 
 public class SearchForm_TM extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(SearchForm_TM.class.getName());
-
+  private BookingService_MA bookingService = new BookingService_MA();
     public SearchForm_TM() {
         initComponents();                 // اول حاجه تكون كل الكمبوننتس
         setLocationRelativeTo(null);  // تخلي الفورم في نص الشاشة
@@ -157,14 +164,46 @@ public class SearchForm_TM extends javax.swing.JFrame {
     }//GEN-LAST:event_btnClearActionPerformed
 
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
-        javax.swing.table.DefaultTableModel model =(javax.swing.table.DefaultTableModel) tblResults.getModel();
-        model.setRowCount(0); // نمسح أي نتائج قديمة من الجدول قبل عرض نتائج جديدة
-        // بيانات تجريبية 
-        model.addRow(new Object[]{1, "Four Seasons Hall", "Sara", "2025-01-10", 200});
-        model.addRow(new Object[]{2, "Royal Hall", "Reema", "2025-01-11", 150});
-        model.addRow(new Object[]{3, "Crystal Hall", "Fatima", "2025-02-01", 180});
-        model.addRow(new Object[]{4, "Movenpink Hall", "Huda", "2025-02-05", 220});
-        //  هذا الكود يتم استبداله بكود فعلي يجيب البيانات من الـ داتابيز
+                                               
+    String customerName = txtCustomerNameSearch.getText().trim();
+    String hall = txtHallSearch.getText().trim();
+    String date = txtDateSearch.getText().trim();
+
+    DefaultTableModel model = (DefaultTableModel) tblResults.getModel();
+    model.setRowCount(0); // نمسح أي نتائج قديمة
+
+    try {
+        // نجيب النتائج من السيرفس
+        List<Booking_MA> results = bookingService.searchBookings(customerName, hall, date);
+
+        if (results.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "No bookings found.",
+                    "Search",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // نضيف النتائج للجدول
+        for (Booking_MA b : results) {
+            model.addRow(new Object[]{
+                    b.getId(),
+                    b.getHall(),
+                    b.getCustomerName(),
+                    b.getDate(),
+                    b.getGuests()
+            });
+        }
+
+    } catch (Exception ex) {
+        logger.log(Level.SEVERE, "Error searching bookings", ex);
+        JOptionPane.showMessageDialog(this,
+                "Error searching bookings: " + ex.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+    }
+
+
     }//GEN-LAST:event_btnSearchActionPerformed
 
     public static void main(String args[]) {

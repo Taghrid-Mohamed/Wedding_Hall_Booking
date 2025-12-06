@@ -1,8 +1,13 @@
 package gui_TM;
+import service_MA.BookingService_MA;
+import model_MA.Booking_MA;
+import java.util.logging.Level;
+import javax.swing.JOptionPane;
 
 public class BookingForm_TM extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(BookingForm_TM.class.getName());
+ private BookingService_MA bookingService = new BookingService_MA();
 
     public BookingForm_TM() {
         initComponents();
@@ -180,35 +185,80 @@ public class BookingForm_TM extends javax.swing.JFrame {
     }//GEN-LAST:event_btnClearActionPerformed
     // نجمع البيانات من الواجهه ونخزنها في متغيرات
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
-        String hall = (String) cmbHall.getSelectedItem(); 
-        String customerName = txtCustomerName.getText().trim(); // ناخذ اسم الزبون من الواجهة ونمسح الفراغات
-        String phone = txtPhone.getText().trim(); 
-        String date = txtDate.getText().trim(); 
-        String guestsText = txtGuests.getText().trim(); // ناخذ عدد الضيوف كنص
-        // validation
-        if (hall == null || hall.equals("Select Hall")) { // لو ما اختارش قاعة او القاعة Select Hall
-            javax.swing.JOptionPane.showMessageDialog(this, "Please select a hall!","Validation Error",javax.swing.JOptionPane.WARNING_MESSAGE); //نطلع رسالة تحذير 
-        return;}
-        //  هل في حقول فاضية؟
-        if (customerName.isEmpty() || phone.isEmpty()|| date.isEmpty() || guestsText.isEmpty()) { 
-            javax.swing.JOptionPane.showMessageDialog(this,"Please fill all fields!", "Validation Error",javax.swing.JOptionPane.WARNING_MESSAGE); //يطلع رسالة للمستخدم
-            return; }
-        //  تحقق انه رقم الهاتف ارقام بس
-        if (!phone.matches("\\d+")) { 
-            javax.swing.JOptionPane.showMessageDialog(this,"Phone must contain numbers only!", "Validation Error",javax.swing.JOptionPane.WARNING_MESSAGE);
-            return; }
-        // تحقق انه عدد الضيوف عدد صحيح
-        try {
-            int guests = Integer.parseInt(guestsText); // نحول النص الى int
-            if (guests <= 0) { 
-                javax.swing.JOptionPane.showMessageDialog(this,"Guests must be > 0","Validation Error",javax.swing.JOptionPane.WARNING_MESSAGE);
-                return; }
-        } catch (NumberFormatException e) { // لو التحويل فشل من نص الى رقم
-            javax.swing.JOptionPane.showMessageDialog(this,"Invalid guests number!", "Validation Error",javax.swing.JOptionPane.WARNING_MESSAGE);
-            return;}
-        // في حالة كل المدخلات تمام تتنفذ هذه السطور
-        javax.swing.JOptionPane.showMessageDialog(this,"Booking saved successfully!", "Success",javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    String hall = (String) cmbHall.getSelectedItem();
+    String customerName = txtCustomerName.getText().trim();
+    String phone = txtPhone.getText().trim();
+    String date = txtDate.getText().trim();
+    String guestsText = txtGuests.getText().trim();
+        
+    // 1) التحقق من اختيار القاعة
+    if (hall == null || hall.equals("Select Hall")) {
+        JOptionPane.showMessageDialog(this,
+                "Please select a hall!",
+                "Validation Error",
+                JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+        
+       // 2) التحقق من الحقول الفارغة
+    if (customerName.isEmpty() || phone.isEmpty() || date.isEmpty() || guestsText.isEmpty()) {
+        JOptionPane.showMessageDialog(this,
+                "Please fill all fields!",
+                "Validation Error",
+                JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    // 3) التحقق من أن الهاتف أرقام فقط
+    if (!phone.matches("\\d+")) {
+        JOptionPane.showMessageDialog(this,
+                "Phone must contain numbers only!",
+                "Validation Error",
+                JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    // 4) التحقق من أن عدد الضيوف رقم صحيح > 0
+    int guests;
+    try {
+        guests = Integer.parseInt(guestsText);
+        if (guests <= 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Guests must be > 0",
+                    "Validation Error",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+    } catch (NumberFormatException e) {
+        JOptionPane.showMessageDialog(this,
+                "Invalid guests number!",
+                "Validation Error",
+                JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    // 5) لو كل شيء تمام: نخزن الحجز في الداتا بيز
+    try {
+        Booking_MA booking = new Booking_MA(hall, customerName, phone, date, guests);
+
+        bookingService.addBooking(booking); // 👈 هذه اللي تكتب في جدول bookings
+
+        JOptionPane.showMessageDialog(this,
+                "Booking saved successfully!",
+                "Success",
+                JOptionPane.INFORMATION_MESSAGE);
+
+        // نمسح الحقول باستعمال زر Clear
         btnClearActionPerformed(null);
+
+    } catch (Exception ex) {
+        logger.log(Level.SEVERE, "Error saving booking", ex);
+        JOptionPane.showMessageDialog(this,
+                "Error saving booking: " + ex.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+    }
+        
     }//GEN-LAST:event_btnSaveActionPerformed
 
     public static void main(String args[]) {
