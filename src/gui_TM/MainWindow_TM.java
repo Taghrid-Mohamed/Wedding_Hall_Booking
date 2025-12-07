@@ -7,6 +7,11 @@ public class MainWindow_TM extends javax.swing.JFrame {
     public MainWindow_TM() {
         initComponents();
         setLocationRelativeTo(null);
+         // 👇 سطر جديد
+    String title = util_ES.ConfigUtil_ES.getOrDefault(
+            "systemTitle", 
+            "Wedding Hall Booking System");
+    setTitle(title);
     }
 
     @SuppressWarnings("unchecked")

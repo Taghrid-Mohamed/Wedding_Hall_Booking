@@ -1,6 +1,7 @@
 package gui_TM;
 import service_MA.UserService_MA;
 import model_MA.User_MA;
+import util_ES.LoggerUtil_ES;
 
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
@@ -101,22 +102,36 @@ private UserService_MA userService = new UserService_MA();
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
-    String user = txtUsername.getText().trim();
+     String user = txtUsername.getText().trim();
     String pass = new String(txtPassword.getPassword());
 
+    // ---------------------------
+    // 1) Validation
+    // ---------------------------
     if (user.isEmpty() || pass.isEmpty()) {
         JOptionPane.showMessageDialog(this,
                 "Please enter username and password",
                 "Validation Error",
                 JOptionPane.WARNING_MESSAGE);
+
+        LoggerUtil_ES.logInfo("Login failed: missing username or password.");
         return;
     }
 
+    // نسجل محاولة الدخول
+    LoggerUtil_ES.logInfo("Login attempt for user: " + user);
+
     try {
-        // نحاول نلقو يوزر في الداتابيز
+
+        // ---------------------------
+        // 2) نحاول نجيب اليوزر من الداتابيز
+        // ---------------------------
         User_MA loggedUser = userService.login(user, pass);
 
         if (loggedUser != null) {
+            // نجاح
+            LoggerUtil_ES.logInfo("Login SUCCESS for user: " + user);
+
             JOptionPane.showMessageDialog(this,
                     "Login Successful! Welcome " + loggedUser.getUsername(),
                     "Success",
@@ -125,25 +140,34 @@ private UserService_MA userService = new UserService_MA();
             MainWindow_TM main = new MainWindow_TM();
             main.setLocationRelativeTo(null);
             main.setVisible(true);
+
             this.dispose();
 
         } else {
+            // فشل
+            LoggerUtil_ES.logError("Login FAILED for user: " + user);
+
             JOptionPane.showMessageDialog(this,
                     "Invalid Username or Password!",
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
+
             txtPassword.setText("");
             txtPassword.requestFocus();
         }
 
     } catch (Exception ex) {
-        logger.log(Level.SEVERE, "Error during login", ex);
+
+        LoggerUtil_ES.logError("Exception during login: " + ex.getMessage());
+        ex.printStackTrace();
+
         JOptionPane.showMessageDialog(this,
-                "Error during login: " + ex.getMessage(),
+                "Unexpected error during login:\n" + ex.getMessage(),
                 "Error",
                 JOptionPane.ERROR_MESSAGE);
-    
-}
+    }
+
+
     }//GEN-LAST:event_btnLoginActionPerformed
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
         this.dispose();

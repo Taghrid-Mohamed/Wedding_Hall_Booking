@@ -2,7 +2,7 @@ package dao_MA;
 
 import db_MA.DBConnection_MA;
 import model_MA.Booking_MA;
-
+import util_ES.LoggerUtil_ES;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,13 @@ public class BookingDAO_MA {
             ps.setInt(5, booking.getGuests());
 
             ps.executeUpdate();
-        }
+             LoggerUtil_ES.logInfo("Booking inserted for customer: " + booking.getCustomerName());
+
+    } catch (SQLException e) {
+        LoggerUtil_ES.logError("insertBooking failed: " + e.getMessage());
+        throw e;
+    }
+        
     }
 
     // -----------------------------------------------------------

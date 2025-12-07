@@ -1,8 +1,17 @@
 package gui_TM;
 import service_MA.BookingService_MA;
 import model_MA.Booking_MA;
+import report_ES.ReportExporter_ES;
+import report_ES.FileExporter_ES;
+
+import threads_ES.AutoRefreshThread_ES;
+import threads_ES.ProgressBarThread_ES;
+import util_ES.LoggerUtil_ES;
+import util_ES.ConfigUtil_ES;
+
 
 import java.util.List;
+import java.util.HashMap;
 import java.util.logging.Level;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JOptionPane;
@@ -12,21 +21,39 @@ public class ReportsView_TM extends javax.swing.JFrame {
     private static final java.util.logging.Logger logger =
 java.util.logging.Logger.getLogger(ReportsView_TM.class.getName());
   private BookingService_MA bookingService = new BookingService_MA();
+  private AutoRefreshThread_ES autoRefreshThread;
 
-    public ReportsView_TM() {
+  public ReportsView_TM() {
         initComponents();
-        setLocationRelativeTo(null); 
+        setLocationRelativeTo(null);
         setTitle("Reports");
-        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tblReports.getModel();
-        model.setColumnCount(0); //نمسح الأعمدة القديمة 
+
+        // قراءة اسم الشركة من config
+        String company = ConfigUtil_ES.getOrDefault("companyName", "Wedding Company");
+        lblTitle.setText("Reports - " + company);
+
+        prepareTable();
+        loadReportsTable();
+
+        // تشغيل Auto Refresh مرة واحدة فقط
+        autoRefreshThread = new AutoRefreshThread_ES(this);
+        autoRefreshThread.start();
+    }
+
+    private void prepareTable() {
+        DefaultTableModel model = (DefaultTableModel) tblReports.getModel();
+        model.setColumnCount(0);
         model.addColumn("Booking ID");
         model.addColumn("Hall");
         model.addColumn("Customer");
         model.addColumn("Date");
         model.addColumn("Guests");
         model.addColumn("Total Price");
-        loadReportsTable();
     }
+
+    // -------------------------------
+    // زر Load
+    // ------------------
 
     
     @SuppressWarnings("unchecked")
@@ -36,10 +63,10 @@ java.util.logging.Logger.getLogger(ReportsView_TM.class.getName());
         lblTitle = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblReports = new javax.swing.JTable();
-        btnLoad = new javax.swing.JButton();
         btnClose = new javax.swing.JButton();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
+        jProgressBar2 = new javax.swing.JProgressBar();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -58,14 +85,6 @@ java.util.logging.Logger.getLogger(ReportsView_TM.class.getName());
             }
         ));
         jScrollPane1.setViewportView(tblReports);
-
-        btnLoad.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        btnLoad.setText("Load");
-        btnLoad.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnLoadActionPerformed(evt);
-            }
-        });
 
         btnClose.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         btnClose.setText("Close");
@@ -94,100 +113,105 @@ java.util.logging.Logger.getLogger(ReportsView_TM.class.getName());
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(207, 207, 207)
-                .addComponent(lblTitle)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(54, 54, 54)
-                        .addComponent(btnLoad)
-                        .addGap(53, 53, 53)
-                        .addComponent(btnClose)
-                        .addGap(52, 52, 52)
-                        .addComponent(jButton1)
-                        .addGap(38, 38, 38)
-                        .addComponent(jButton2)
-                        .addGap(0, 0, Short.MAX_VALUE))
+                        .addGap(341, 341, 341)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lblTitle)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 460, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap(43, Short.MAX_VALUE)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 460, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(48, 48, 48))
+                        .addGap(375, 375, 375)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jProgressBar2, javax.swing.GroupLayout.PREFERRED_SIZE, 417, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(10, 10, 10)
+                                .addComponent(btnClose)
+                                .addGap(91, 91, 91)
+                                .addComponent(jButton1)
+                                .addGap(74, 74, 74)
+                                .addComponent(jButton2)))))
+                .addGap(428, 428, 428))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(25, 25, 25)
+                .addGap(28, 28, 28)
                 .addComponent(lblTitle)
-                .addGap(29, 29, 29)
+                .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 275, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(26, 26, 26)
+                .addGap(34, 34, 34)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnClose)
-                    .addComponent(btnLoad)
                     .addComponent(jButton1)
                     .addComponent(jButton2))
-                .addContainerGap(38, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jProgressBar2, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(19, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
                       
 
-    private void btnLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoadActionPerformed
-
-         loadReportsTable();
-    }//GEN-LAST:event_btnLoadActionPerformed
-
     private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
+        
+        if (autoRefreshThread != null) autoRefreshThread.stopRefreshing();
         this.dispose();
-    }//GEN-LAST:event_btnCloseActionPerformed
 
+    }//GEN-LAST:event_btnCloseActionPerformed
+//
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-         exportToFile();
+// نجهز الـ ProgressBar
+    jProgressBar2.setValue(0);
+    jProgressBar2.setVisible(true);
+
+    // نبدأ خيط التحميل (اللي يحرك الشريط)
+    ProgressBarThread_ES progressThread = new ProgressBarThread_ES(jProgressBar2);
+    progressThread.start();
+
+    // نخلو التصدير يشتغل في Thread ثاني
+    new Thread(() -> {
+        try {
+            // التصدير (I/O + DB)
+            exportToFile();
+        } finally {
+            // نوقف حركة الشريط ونخليه يوصل 100
+            progressThread.stopRunning();
+            javax.swing.SwingUtilities.invokeLater(() -> jProgressBar2.setValue(100));
+        }
+    }).start();
+
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-       
-    try {
-        List<Booking_MA> list = bookingService.getAllBookings();
+  
+        try {
+            List<Booking_MA> list = bookingService.getAllBookings();
+            HashMap<String, Integer> map = new HashMap<>();
 
-        // HashMap: key = hall name, value = total guests
-        java.util.HashMap<String, Integer> map = new java.util.HashMap<>();
-
-        for (Booking_MA b : list) {
-            String hall = b.getHall();
-            int guests = b.getGuests();
-
-            if (map.containsKey(hall)) {
-                map.put(hall, map.get(hall) + guests);
-            } else {
-                map.put(hall, guests);
+            for (Booking_MA b : list) {
+                map.put(b.getHall(), map.getOrDefault(b.getHall(), 0) + b.getGuests());
             }
+
+            StringBuilder sb = new StringBuilder();
+            for (String hall : map.keySet()) {
+                sb.append(hall).append(" : ").append(map.get(hall)).append(" guests\n");
+            }
+
+            JOptionPane.showMessageDialog(this, sb.toString(), "Guests Summary",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
-
-        StringBuilder sb = new StringBuilder();
-        for (String hall : map.keySet()) {
-            sb.append(hall)
-              .append(" : ")
-              .append(map.get(hall))
-              .append(" guests\n");
-        }
-
-        JOptionPane.showMessageDialog(this, sb.toString(), 
-                "Guests Summary", JOptionPane.INFORMATION_MESSAGE);
-
-    } catch (Exception ex) {
-        JOptionPane.showMessageDialog(this,
-                "Error generating summary: " + ex.getMessage(),
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
-    }
+    
 
     }//GEN-LAST:event_jButton2ActionPerformed
 
      // دالة خاصة لتحميل البيانات من الداتا بيز للجدول
     private void loadReportsTable() {
+       
         DefaultTableModel model = (DefaultTableModel) tblReports.getModel();
         model.setRowCount(0); // نمسح أي بيانات قديمة
 
@@ -207,6 +231,7 @@ java.util.logging.Logger.getLogger(ReportsView_TM.class.getName());
                         b.getGuests(),
                         totalPrice
                 });
+              
             }
 
         } catch (Exception ex) {
@@ -215,31 +240,25 @@ java.util.logging.Logger.getLogger(ReportsView_TM.class.getName());
                     "Error loading reports: " + ex.getMessage(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
-        }
-    }
+        }}
+       
+ // هذه يستعملها الثريد عشان يحدث الجدول
+public void refreshFromThread() {
+    loadReportsTable();
+}
+
+   
 // -----------------------------------------
 // THIS FUNCTION WE ADD IT HERE
 private void exportToFile() {
     try {
-        java.io.PrintWriter writer = new java.io.PrintWriter("reports.txt");
+        // نجيب كل الحجوزات من السيرفس (شغل عضو 2)
+        List<Booking_MA> list = bookingService.getAllBookings();
 
-        DefaultTableModel model = (DefaultTableModel) tblReports.getModel();
+        // نستعمل كلاس العضو 3 FileExporter_ES
+        FileExporter_ES.exportBookingsToTxt(list, "reports.txt");
 
-        // كتابة العناوين
-        for (int i = 0; i < model.getColumnCount(); i++) {
-            writer.print(model.getColumnName(i) + "\t");
-        }
-        writer.println();
-
-        // كتابة الصفوف
-        for (int row = 0; row < model.getRowCount(); row++) {
-            for (int col = 0; col < model.getColumnCount(); col++) {
-                writer.print(model.getValueAt(row, col) + "\t");
-            }
-            writer.println();
-        }
-
-        writer.close();
+        util_ES.LoggerUtil_ES.logInfo("Exported " + list.size() + " bookings to reports.txt");
 
         JOptionPane.showMessageDialog(this,
                 "Report exported successfully to reports.txt",
@@ -247,6 +266,8 @@ private void exportToFile() {
                 JOptionPane.INFORMATION_MESSAGE);
 
     } catch (Exception ex) {
+        util_ES.LoggerUtil_ES.logError("Error exporting report: " + ex.getMessage());
+
         JOptionPane.showMessageDialog(this,
                 "Error exporting report: " + ex.getMessage(),
                 "Error",
@@ -265,11 +286,12 @@ private void exportToFile() {
     }
 
 
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnClose;
-    private javax.swing.JButton btnLoad;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
+    private javax.swing.JProgressBar jProgressBar2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblTitle;
     private javax.swing.JTable tblReports;
