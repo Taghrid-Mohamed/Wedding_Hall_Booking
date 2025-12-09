@@ -162,31 +162,39 @@ public ReportsView_TM() {
     }//GEN-LAST:event_btnCloseActionPerformed
 //
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-                                       
-    // نخلي الشريط يبدأ من 0 ويبان
-    jProgressBar2.setValue(0);
+                
+    // نبدأ من جديد
     jProgressBar2.setVisible(true);
+    jProgressBar2.setValue(0);
 
-    // نبدأ الثريد اللي يحرّك الشريط
-    ProgressBarThread_ES progressThread = new ProgressBarThread_ES(jProgressBar2);
-    progressThread.start();
+    // نبدأ ثريد التحميل
+    Thread t = new Thread(() -> {
 
-    // نخلو عملية التصدير تخدم في ثريد آخر
-    new Thread(() -> {
         try {
-            // التصدير (I/O + DB)
-            exportToFile();
-        } finally {
-            // نوقف ثريد البار
-            progressThread.stopRunning();
+            // نخلي البار يتحرك تدريجياً
+            for (int i = 0; i <= 100; i += 5) {
+                try { Thread.sleep(60); } catch (Exception e) {}
+                int val = i;
 
-            // نرجع للـ Swing Thread باش نغيّر على الواجهه
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    jProgressBar2.setValue(val);
+                });
+            }
+
+            // ننفذ التصدير الحقيقي
+            exportToFile();
+
+        } finally {
+
+            // بعد ما يكمل: نخفيه ونوقفه
             javax.swing.SwingUtilities.invokeLater(() -> {
-                jProgressBar2.setValue(100);   // يوصل لآخره
-                jProgressBar2.setVisible(false); // وبعدها يختفي
+                jProgressBar2.setVisible(false);
             });
         }
-    }).start();
+
+    });
+
+    t.start();
 
     }//GEN-LAST:event_jButton1ActionPerformed
 
